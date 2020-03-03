@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 import click
 import signal
 import sys
