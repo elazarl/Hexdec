@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-import click
+import argparse
 import signal
 import sys
 import time
@@ -31,19 +31,10 @@ def welcome():
     """)
 
 
-@click.command()
-@click.option('--max-number',
-              type=click.IntRange(1, sys.maxsize),
-              prompt='Choose a maximal number',
-              default=DEFAULT_UPPER_LIMIT)
-@click.option('--game-mode',
-              type=click.Choice((HEX, DEC, MIX), case_sensitive=False),
-              prompt=True,
-              default=HEX)
 def play(max_number, game_mode):
     signal.signal(signal.SIGINT, signal_handler)
     global AVERAGE_TIME, ITERATIONS  # I use globals so that signal_handler can access the values from all stack-frames
-    click.echo('To stop the game, type Ctrl+C')
+    print('To stop the game, type Ctrl+C')
 
     # Game loop
     while True:
@@ -56,7 +47,7 @@ def play(max_number, game_mode):
         ITERATIONS += 1
         AVERAGE_TIME = (AVERAGE_TIME * (ITERATIONS - 1) + response_time) / ITERATIONS
         if not user_succeeded:
-            click.echo('Oops, you got that last one wrong...')
+            print('Oops, you got that last one wrong...')
             say_goodbye()
             return
 
@@ -72,12 +63,12 @@ def play_round(max_number, hex_to_dec):
             converted = int(input_num, 10 if hex_to_dec else 16)
             break
         except ValueError:
-            click.echo('invalid value, try again:')
+            print('invalid value, try again:')
     return converted == n, response_time
 
 
 def say_goodbye():
-    click.echo('\nYou played {0} iterations '
+    print('\nYou played {0} iterations '
                'and your average response time was {1:.3f} seconds. '
                'Come back again! :)'.format(ITERATIONS, AVERAGE_TIME))
 
@@ -94,5 +85,9 @@ if __name__ == '__main__':
     if sys.version_info.major < 3:
         print('Use Python3 and later :)')
         sys.exit(0)
+    parser = argparse.ArgumentParser(description='Play a game for memorizing hex sequences')
+    parser.add_argument('--max_number', type=int, default=DEFAULT_UPPER_LIMIT, help='Choose a maximal number')
+    parser.add_argument('--game-mode', type=str, choices=[HEX, DEC, MIX], default=HEX)
+    args = parser.parse_args()
     welcome()
-    play()
+    play(args.max_number, args.game_mode)
